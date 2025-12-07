@@ -1,0 +1,43 @@
+CREATE TABLE users (
+  user_id SERIAL PRIMARY KEY,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  email VARCHAR(200) UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  role VARCHAR(20) DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+SELECT * FROM users
+CREATE TABLE ukm (
+  ukm_id SERIAL PRIMARY KEY,
+  nama VARCHAR(150) NOT NULL,
+  deskripsi TEXT,
+  gambar TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ukm_members (
+  member_id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+  ukm_id INT REFERENCES ukm(ukm_id) ON DELETE CASCADE,
+  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  member_role VARCHAR(20) DEFAULT 'member',
+  UNIQUE(user_id, ukm_id)
+);
+
+CREATE TABLE ukm_events (
+  event_id SERIAL PRIMARY KEY,
+  ukm_id INT REFERENCES ukm(ukm_id) ON DELETE CASCADE,
+  nama VARCHAR(200) NOT NULL,
+  deskripsi TEXT,
+  tanggal DATE,
+  lokasi VARCHAR(200),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ukm_event_participants (
+  participant_id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+  event_id INT REFERENCES ukm_events(event_id) ON DELETE CASCADE,
+  registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, event_id)
+);
