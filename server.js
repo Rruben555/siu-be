@@ -361,10 +361,14 @@ app.get("/kegiatan/:event_id", async (req, res) => {
     if (event.rows.length === 0)
       return res.status(404).json({ error: "Event not found" });
 
-    // Ambil peserta
+    // Ambil peserta (Tidak ada email lagi)
     const peserta = await pool.query(
-      `SELECT p.participant_id, p.registered_at,
-              u.user_id, u.nama, u.email
+      `SELECT 
+         p.participant_id, 
+         p.registered_at,
+         u.user_id, 
+         u.nama, 
+         u.fakultas
        FROM participant p
        JOIN users u ON p.user_id = u.user_id
        WHERE p.event_id = $1`,
@@ -381,6 +385,7 @@ app.get("/kegiatan/:event_id", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 
 app.get("/ukm/:ukm_id/kegiatan", async (req, res) => {
@@ -433,6 +438,29 @@ app.post("/kegiatan/:event_id/register", auth, async (req, res) => {
     data: q.rows[0] || "Already registered"
   });
 });
+
+app.get("/kegiatan/:event_id/check-membership", auth, async (req, res) => {
+  const { event_id } = req.params;
+  const user_id = req.user.user_id;
+
+  try {
+    const q = await pool.query(`
+      SELECT u.ukm_id, 
+             (SELECT 1 FROM anggota WHERE user_id=$1 AND ukm_id=u.ukm_id) AS is_member
+      FROM kegiatan k
+      JOIN ukm u ON u.ukm_id = k.ukm_id
+      WHERE k.event_id=$2
+    `, [user_id, event_id]);
+
+    if (q.rows.length === 0) return res.status(404).json({ error: "Event not found" });
+
+    res.json(q.rows[0]);
+
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 // ==================================================
 // LAPORAN
